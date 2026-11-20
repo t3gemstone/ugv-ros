@@ -30,6 +30,7 @@ Kılavuzlar [T3 Gemstone dokümantasyon sitesindedir](https://docs.t3gemstone.or
 | [Pil ve Kullanım Güvenliği](https://docs.t3gemstone.org/tr/projects/ugv-ros/safety) | Li-Po pil kuralları, taşıma ve güvenli kullanım |
 | [Saha Testi](https://docs.t3gemstone.org/tr/projects/ugv-ros/field-test) | IMU, motor, enkoder, lidar ve çizgi sensörü kontrolleri |
 | [Kullanım](https://docs.t3gemstone.org/tr/projects/ugv-ros/usage) | Başlatma argümanları, web arayüzü, kalibrasyon, haritalama, systemd servisi, güncelleme, Docker |
+| [Simülasyon](https://docs.t3gemstone.org/tr/projects/ugv-ros/simulation) | Robot olmadan Gazebo'da haritalama, navigasyon ve çizgi izleme |
 | [Ağ Bağlantısı](https://docs.t3gemstone.org/tr/projects/ugv-ros/network) | Robotu Wi-Fi ağına bağlama ve IP adresini bulma |
 | [Mimari](https://docs.t3gemstone.org/tr/projects/ugv-ros/architecture) | ROS 2 paketleri, veri akışı, sürüş modları, TF ağacı, topic ve servisler |
 

@@ -30,6 +30,7 @@ The guides are on the [T3 Gemstone documentation site](https://docs.t3gemstone.o
 | [Battery and Operating Safety](https://docs.t3gemstone.org/en/projects/ugv-ros/safety) | Li-Po battery rules, transport and safe operation |
 | [Field Test](https://docs.t3gemstone.org/en/projects/ugv-ros/field-test) | IMU, motor, encoder, lidar and line sensor checks |
 | [Usage](https://docs.t3gemstone.org/en/projects/ugv-ros/usage) | Launch arguments, web UI, calibration, mapping, systemd service, updates, Docker |
+| [Simulation](https://docs.t3gemstone.org/en/projects/ugv-ros/simulation) | Mapping, navigation and line following in Gazebo, without the robot |
 | [Network Connection](https://docs.t3gemstone.org/en/projects/ugv-ros/network) | Connecting the robot to Wi-Fi and finding its IP address |
 | [Architecture](https://docs.t3gemstone.org/en/projects/ugv-ros/architecture) | ROS 2 packages, data flow, drive modes, TF tree, topics and services |
 
