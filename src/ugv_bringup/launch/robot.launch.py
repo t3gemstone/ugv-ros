@@ -4,9 +4,15 @@
   ros2 launch ugv_bringup robot.launch.py nav:=true          # + Nav2 goal navigation
   ros2 launch ugv_bringup robot.launch.py slam_mode:=localization map:=~/ugv_maps/salon nav:=true
   ros2 launch ugv_bringup robot.launch.py backend:=mock      # no hardware (laptop)
+  ros2 launch ugv_simulation sim.launch.py                   # Gazebo (runs backend:=sim)
 
 Arguments:
-  backend      gpiod | mock     mock: motor/encoder simulation, IMU and lidar off
+  backend      gpiod | mock | sim
+                                mock: motor/encoder simulation, IMU and lidar off
+                                sim: started by ugv_simulation's sim.launch.py; Gazebo drives
+                                the wheels and publishes IMU and lidar, ugv_simulation's
+                                line_sensor_sim stands in for the line sensor, every node
+                                runs on simulated time
   hardware     <yaml>           pin/hardware file (default config/hardware.yaml)
   imu          true | false     ICM-20948
   fusion       true | false     EKF (wheel + IMU) publishes the odom TF;
@@ -30,7 +36,7 @@ import yaml
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch_ros.actions import Node
+from launch_ros.actions import Node, SetParameter
 from launch_ros.substitutions import FindPackageShare
 
 ARGS = {
@@ -66,6 +72,7 @@ def _setup(context):
     flag = lambda name: arg[name].lower() in ('true', '1', 'yes')  # noqa: E731
     backend = arg['backend']
     mock = backend == 'mock'
+    sim = backend == 'sim'
     bringup = _share('ugv_bringup', context)
     hardware = (os.path.expanduser(arg['hardware'])
                 or os.path.join(bringup, 'config', 'hardware.yaml'))
@@ -82,18 +89,21 @@ def _setup(context):
 
     fusion = flag('fusion')
     odom_topic = '/odometry/filtered' if fusion else '/wheel/odom'
-    actions = [_include('ugv_description', 'description.launch.py', context)]
+    # In simulation Gazebo stands in for ugv_base_node, ugv_imu_node and the lidar driver.
+    actions = [SetParameter(name='use_sim_time', value=True)] if sim else []
+    actions.append(_include('ugv_description', 'description.launch.py', context))
 
-    actions.append(Node(
-        package='ugv_base', executable='ugv_base_node', output='screen',
-        parameters=[hardware, {
-            'backend': backend,
-            'wheel_radius': float(geometry['wheel_radius']),
-            'wheel_separation': float(geometry['wheel_separation']),
-            'publish_tf': not fusion,
-        }]))
+    if not sim:
+        actions.append(Node(
+            package='ugv_base', executable='ugv_base_node', output='screen',
+            parameters=[hardware, {
+                'backend': backend,
+                'wheel_radius': float(geometry['wheel_radius']),
+                'wheel_separation': float(geometry['wheel_separation']),
+                'publish_tf': not fusion,
+            }]))
 
-    if flag('imu') and not mock:
+    if flag('imu') and not mock and not sim:
         actions.append(Node(package='ugv_imu', executable='ugv_imu_node', output='screen',
                             parameters=[hardware]))
     if fusion:
@@ -101,7 +111,7 @@ def _setup(context):
             package='robot_localization', executable='ekf_node', name='ekf_filter_node',
             output='screen', parameters=[os.path.join(bringup, 'config', 'ekf.yaml')]))
 
-    if flag('lidar') and not mock:
+    if flag('lidar') and not mock and not sim:
         actions.append(Node(
             package='ugv_hal', executable='lidar_manager_node', output='screen',
             parameters=[hardware, {
@@ -112,8 +122,9 @@ def _setup(context):
             }]))
 
     if flag('line'):
-        actions.append(Node(package='ugv_line', executable='line_sensor_node', output='screen',
-                            parameters=[hardware, {'backend': backend}]))
+        if not sim:
+            actions.append(Node(package='ugv_line', executable='line_sensor_node',
+                                output='screen', parameters=[hardware, {'backend': backend}]))
         actions.append(Node(package='ugv_line', executable='line_follower_node', output='screen',
                             parameters=[control]))
 
@@ -131,7 +142,8 @@ def _setup(context):
 
     if flag('slam'):
         actions.append(_include('ugv_navigation', 'slam.launch.py', context,
-                                slam_mode=arg['slam_mode'], map=arg['map']))
+                                slam_mode=arg['slam_mode'], map=arg['map'],
+                                use_sim_time=str(sim).lower()))
         actions.append(Node(package='ugv_navigation', executable='map_manager_node',
                             output='screen',
                             parameters=[control, {'slam_mode': arg['slam_mode']}]))

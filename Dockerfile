@@ -3,7 +3,8 @@
 #
 # Ubuntu 24.04 + ROS 2 Jazzy (arm64 T3 Gemstone O1 and amd64 PC). Three stages:
 #   base   ROS 2 Jazzy and the dependencies of the UGV packages
-#   box    development environment: 'task box' opens it with Distrobox, CI runs its jobs here
+#   box    development environment: 'task box' opens it with Distrobox, CI runs its jobs here;
+#          it also gets Gazebo Harmonic for the simulation in sim/
 #   robot  built workspace: 'docker compose build' builds this stage (default)
 
 FROM ros:jazzy-ros-base AS base
@@ -61,6 +62,14 @@ RUN apt-get update \
         sudo \
         vim \
     && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Gazebo Harmonic and ros_gz for the simulation (sim/). Only here: the robot image
+# and the robot's install script resolve the dependencies of src/ alone.
+ARG ROSDEP_ARGS=""
+COPY sim/ugv_simulation/package.xml sim/ugv_simulation/
+RUN apt-get update \
+    && rosdep install --from-paths src sim --ignore-src -y ${ROSDEP_ARGS} \
     && rm -rf /var/lib/apt/lists/*
 
 # Distrobox copies /etc/os-release from the image; a symlink is lost in the copy

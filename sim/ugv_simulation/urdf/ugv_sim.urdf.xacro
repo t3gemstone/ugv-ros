@@ -1,0 +1,180 @@
+<?xml version="1.0"?>
+<!--
+  UGV model for Gazebo Harmonic.
+
+  The geometry comes from ugv_description (urdf/ugv.urdf.xacro, config/robot.yaml);
+  this file only adds what the simulator needs: masses and inertias, the caster
+  contact, wheel friction, and the Gazebo systems that stand in for the hardware:
+    differential drive  instead of ugv_base_node:  /cmd_vel -> /wheel/odom, /joint_states
+    IMU                 instead of ugv_imu_node:   /imu/data_raw (imu_link)
+    lidar               instead of sllidar_ros2:   /scan (lidar_link)
+    downward camera     instead of the line sensor array: /line_sensor/image, read by
+                        ugv_simulation's line_sensor_sim into /line/state
+  Topic and frame names match the real robot, so the rest of the stack runs unchanged.
+-->
+<robot name="ugv" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find ugv_description)/urdf/ugv.urdf.xacro"/>
+
+  <!-- Estimated masses [kg]; the simulator only needs plausible values. -->
+  <xacro:property name="body_mass" value="1.1"/>
+  <xacro:property name="wheel_mass" value="0.05"/>
+  <xacro:property name="caster_mass" value="0.01"/>
+
+  <!-- Masses are added as extra links on fixed joints: Gazebo merges a link on a
+       fixed joint into its parent, so the mass ends up on the real link. -->
+  <link name="chassis_inertia">
+    <inertial>
+      <mass value="${body_mass}"/>
+      <inertia ixx="${body_mass * (chassis['width']**2 + chassis['height']**2) / 12}" ixy="0" ixz="0"
+               iyy="${body_mass * (chassis['length']**2 + chassis['height']**2) / 12}" iyz="0"
+               izz="${body_mass * (chassis['length']**2 + chassis['width']**2) / 12}"/>
+    </inertial>
+  </link>
+  <joint name="chassis_inertia_joint" type="fixed">
+    <parent link="chassis_link"/>
+    <child link="chassis_inertia"/>
+  </joint>
+
+  <xacro:macro name="wheel_physics" params="side">
+    <link name="${side}_wheel_inertia">
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="${wheel_mass * (3 * wheel_radius**2 + wheel_width**2) / 12}" ixy="0" ixz="0"
+                 iyy="${wheel_mass * wheel_radius**2 / 2}" iyz="0"
+                 izz="${wheel_mass * (3 * wheel_radius**2 + wheel_width**2) / 12}"/>
+      </inertial>
+    </link>
+    <joint name="${side}_wheel_inertia_joint" type="fixed">
+      <parent link="${side}_wheel_link"/>
+      <child link="${side}_wheel_inertia"/>
+    </joint>
+    <gazebo reference="${side}_wheel_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:wheel_physics side="left"/>
+  <xacro:wheel_physics side="right"/>
+
+  <!-- The caster is modelled as a frictionless sphere. -->
+  <link name="caster_contact">
+    <collision>
+      <geometry><sphere radius="${caster['radius']}"/></geometry>
+    </collision>
+    <inertial>
+      <mass value="${caster_mass}"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+    </inertial>
+  </link>
+  <joint name="caster_contact_joint" type="fixed">
+    <parent link="caster_link"/>
+    <child link="caster_contact"/>
+  </joint>
+  <gazebo reference="caster_contact">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>${wheel_separation}</wheel_separation>
+      <wheel_radius>${wheel_radius}</wheel_radius>
+      <topic>/cmd_vel</topic>
+      <odom_topic>/wheel/odom</odom_topic>
+      <!-- Bridged to /tf only with fusion:=false; otherwise the EKF publishes odom -> base_link. -->
+      <tf_topic>/ugv/tf</tf_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+      <odom_publish_frequency>50</odom_publish_frequency>
+    </plugin>
+    <plugin filename="gz-sim-joint-state-publisher-system" name="gz::sim::systems::JointStatePublisher">
+      <topic>/joint_states</topic>
+      <update_rate>50</update_rate>
+      <joint_name>left_wheel_joint</joint_name>
+      <joint_name>right_wheel_joint</joint_name>
+    </plugin>
+  </gazebo>
+
+  <!-- ICM-20948: mounted like the real one (see imu in robot.yaml), so the raw data has the same signs. -->
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <topic>/imu/data_raw</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.02</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
+
+  <!-- RPLIDAR A1: 360 samples, 0.15-12 m, about 8 Hz. -->
+  <gazebo reference="lidar_link">
+    <sensor name="lidar" type="gpu_lidar">
+      <always_on>true</always_on>
+      <update_rate>8</update_rate>
+      <topic>/scan</topic>
+      <gz_frame_id>lidar_link</gz_frame_id>
+      <lidar>
+        <scan>
+          <horizontal>
+            <samples>360</samples>
+            <resolution>1</resolution>
+            <min_angle>-3.14159</min_angle>
+            <max_angle>3.14159</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.15</min>
+          <max>12.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </lidar>
+    </sensor>
+  </gazebo>
+
+  <!-- Line sensor array (Pololu QTR-8A): a downward camera at the array whose footprint on
+       the ground is +-line_camera_half_width wide (line_sensor_sim's half_width). -->
+  <xacro:property name="line_camera_half_width" value="0.04"/>
+  <xacro:property name="line_sensor_height" value="${wheel_radius + line_sensor['z']}"/>
+  <gazebo reference="line_sensor_link">
+    <sensor name="line_camera" type="camera">
+      <pose>0 0 0 0 ${pi / 2} 0</pose>
+      <always_on>true</always_on>
+      <update_rate>50</update_rate>
+      <topic>/line_sensor/image</topic>
+      <gz_frame_id>line_sensor_link</gz_frame_id>
+      <camera>
+        <horizontal_fov>${2 * atan(line_camera_half_width / line_sensor_height)}</horizontal_fov>
+        <image>
+          <width>96</width>
+          <height>8</height>
+          <format>L8</format>
+        </image>
+        <clip>
+          <near>${line_sensor_height / 4}</near>
+          <far>0.5</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
+
+</robot>

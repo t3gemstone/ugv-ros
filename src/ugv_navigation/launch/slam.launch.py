@@ -25,7 +25,8 @@ def _setup(context):
     if mode not in ('mapping', 'localization'):
         raise RuntimeError(f"slam_mode must be mapping or localization, got: {mode}")
 
-    overrides = {'mode': mode, 'use_sim_time': False}
+    use_sim_time = context.launch_configurations['use_sim_time'].lower() in ('true', '1', 'yes')
+    overrides = {'mode': mode, 'use_sim_time': use_sim_time}
     if mode == 'localization':
         if not map_path:
             raise RuntimeError('localization needs map:=<pose graph path without extension>')
@@ -59,5 +60,6 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('slam_mode', default_value='mapping'),
         DeclareLaunchArgument('map', default_value=''),
+        DeclareLaunchArgument('use_sim_time', default_value='false'),
         OpaqueFunction(function=_setup),
     ])

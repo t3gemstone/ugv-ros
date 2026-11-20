@@ -59,9 +59,10 @@ user@host:$ devbox shell                     # installs Distrobox, Task and vcst
 🚀 distrobox:workdir> task lint              # flake8 and shellcheck
 🚀 distrobox:workdir> task test              # unit and web UI tests (same as CI)
 🚀 distrobox:workdir> task mock              # robot without hardware, UI at http://localhost:8000
+🚀 distrobox:workdir> task sim               # robot in a Gazebo office world, UI at http://localhost:8000
 ```
 
-`task destroy` removes the environment. If `task box` fails, run `distrobox-enter --additional-flags "--tty" --name gemstone-ugv-ros --no-workdir --verbose` to see why; an `update-locale: Error: invalid locale settings` message is fixed with `sudo dpkg-reconfigure locales` on the host.
+`task sim` runs the robot in Gazebo Harmonic with its lidar, IMU and line sensor, so mapping, navigation and line following can be tried without the robot; it starts on a line track, so **Line follow** works right away (`task sim -- nav:=true` adds Nav2, `gui:=false` runs it without the Gazebo window). `task destroy` removes the environment. If `task box` fails, run `distrobox-enter --additional-flags "--tty" --name gemstone-ugv-ros --no-workdir --verbose` to see why; an `update-locale: Error: invalid locale settings` message is fixed with `sudo dpkg-reconfigure locales` on the host.
 
 ## Repository layout
 
@@ -72,6 +73,7 @@ user@host:$ devbox shell                     # installs Distrobox, Task and vcst
 boards/t3-gem-o1/      device tree overlay for the T3 Gemstone O1
 firmware/deneyap_line/ Deneyap Mini v2 line sensor firmware
 scripts/               install, start and systemd service scripts for the robot
+sim/ugv_simulation/    Gazebo Harmonic simulation (development computer only)
 src/                   ROS 2 packages (ugv_*)
 Dockerfile             base, box (development environment) and robot (runtime image) stages
 Taskfile.yml           development environment, build, test and hardware-free trial tasks

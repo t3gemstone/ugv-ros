@@ -59,9 +59,10 @@ user@host:$ devbox shell                     # Distrobox, Task ve vcstool'u kura
 🚀 distrobox:workdir> task lint              # flake8 ve shellcheck
 🚀 distrobox:workdir> task test              # birim ve web arayüzü testleri (CI ile aynı)
 🚀 distrobox:workdir> task mock              # donanımsız robot, arayüz http://localhost:8000
+🚀 distrobox:workdir> task sim               # Gazebo ofis dünyasında robot, arayüz http://localhost:8000
 ```
 
-`task destroy` ortamı siler. `task box` başarısız olursa nedenini görmek için `distrobox-enter --additional-flags "--tty" --name gemstone-ugv-ros --no-workdir --verbose` komutunu çalıştırın; `update-locale: Error: invalid locale settings` hatası host'ta `sudo dpkg-reconfigure locales` ile giderilir.
+`task sim` robotu lidarı, IMU'su ve çizgi sensörüyle Gazebo Harmonic'te çalıştırır; haritalama, navigasyon ve çizgi izleme robot olmadan denenebilir. Robot bir çizgi pistinin üzerinde başlar, **Line follow** hemen denenebilir (`task sim -- nav:=true` Nav2'yi ekler, `gui:=false` Gazebo penceresi olmadan çalıştırır). `task destroy` ortamı siler. `task box` başarısız olursa nedenini görmek için `distrobox-enter --additional-flags "--tty" --name gemstone-ugv-ros --no-workdir --verbose` komutunu çalıştırın; `update-locale: Error: invalid locale settings` hatası host'ta `sudo dpkg-reconfigure locales` ile giderilir.
 
 ## Depo yapısı
 
@@ -72,6 +73,7 @@ user@host:$ devbox shell                     # Distrobox, Task ve vcstool'u kura
 boards/t3-gem-o1/      T3 Gemstone O1 için device tree overlay
 firmware/deneyap_line/ Deneyap Mini v2 çizgi sensörü yazılımı
 scripts/               robota kurulum, başlatma ve systemd servisi betikleri
+sim/ugv_simulation/    Gazebo Harmonic simülasyonu (yalnızca geliştirme bilgisayarında)
 src/                   ROS 2 paketleri (ugv_*)
 Dockerfile             base, box (geliştirme ortamı) ve robot (çalışma imajı) aşamaları
 Taskfile.yml           geliştirme ortamı, derleme, test ve donanımsız deneme görevleri

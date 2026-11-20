@@ -48,18 +48,27 @@ tasks:
 
   build:
     desc: Builds the workspace with colcon (arguments such as task build -- --packages-select ugv_base are passed to colcon)
+    preconditions:
+      - sh: test -f /opt/ros/{{ .ROS_DISTRO }}/setup.bash
+        msg: "ROS 2 {{ .ROS_DISTRO }} is only in the development environment: run 'task box' first, then run this task inside it."
     cmds:
       - task: fetch
       - bash -c '{{ .ROS_SETUP }} && colcon build --symlink-install --event-handlers console_cohesion- {{ .CLI_ARGS }}'
 
   lint:
     desc: Checks the Python code with flake8 and the scripts with shellcheck
+    preconditions:
+      - sh: test -f /opt/ros/{{ .ROS_DISTRO }}/setup.bash
+        msg: "ROS 2 {{ .ROS_DISTRO }} is only in the development environment: run 'task box' first, then run this task inside it."
     cmds:
-      - python3 -m flake8 src/ugv_*
+      - python3 -m flake8 src/ugv_* sim/ugv_*
       - shellcheck -e SC1091 setup.sh scripts/*.sh
 
   test:
     desc: Builds, then runs the UGV package tests and the web UI calibration tests
+    preconditions:
+      - sh: test -f /opt/ros/{{ .ROS_DISTRO }}/setup.bash
+        msg: "ROS 2 {{ .ROS_DISTRO }} is only in the development environment: run 'task box' first, then run this task inside it."
     cmds:
       - task: build
       - node --test src/ugv_gcs/test/*.test.cjs
@@ -67,9 +76,21 @@ tasks:
 
   mock:
     desc: Runs the robot without hardware, UI at http://localhost:8000 (arguments such as task mock -- slam:=true are passed to launch)
+    preconditions:
+      - sh: test -f /opt/ros/{{ .ROS_DISTRO }}/setup.bash
+        msg: "ROS 2 {{ .ROS_DISTRO }} is only in the development environment: run 'task box' first, then run this task inside it."
     cmds:
       - task: build
       - bash -c '{{ .WS_SETUP }} && ros2 launch ugv_bringup robot.launch.py backend:=mock fusion:=false line:=false slam:=false {{ .CLI_ARGS }}'
+
+  sim:
+    desc: Runs the robot in the Gazebo office world, UI at http://localhost:8000 (arguments such as task sim -- nav:=true gui:=false are passed to launch)
+    preconditions:
+      - sh: test -f /opt/ros/{{ .ROS_DISTRO }}/setup.bash
+        msg: "ROS 2 {{ .ROS_DISTRO }} is only in the development environment: run 'task box' first, then run this task inside it."
+    cmds:
+      - task: build
+      - bash -c '{{ .WS_SETUP }} && ros2 launch ugv_simulation sim.launch.py {{ .CLI_ARGS }}'
 
   clean:
     desc: Deletes the colcon output (build, install, log)

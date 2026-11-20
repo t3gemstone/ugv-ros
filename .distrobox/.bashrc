@@ -6,6 +6,21 @@ case $- in
       *) return;;
 esac
 
+# 'task box' runs from 'devbox shell' and Distrobox passes that environment through:
+# Nix compilers (CC, CXX, ...), Nix build flags and Python 3.13 paths. Drop them so the
+# box uses its own Ubuntu toolchain and Python, which ROS 2 is built for.
+if [ -n "${DEVBOX_PROJECT_ROOT:-}${IN_NIX_SHELL:-}" ]; then
+    unset AR AS CC CXX LD NM OBJCOPY OBJDUMP RANLIB READELF SIZE STRINGS STRIP \
+        CONFIG_SHELL DETERMINISTIC_BUILD HOST_PATH IN_NIX_SHELL \
+        PYTHONPATH PYTHONHASHSEED PYTHONNOUSERSITE _PYTHON_HOST_PLATFORM _PYTHON_SYSCONFIGDATA_NAME
+    for var in $(compgen -e | grep -E '^(NIX_|DEVBOX_|__DEVBOX)'); do
+        unset "$var"
+    done
+    PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -v -e '^/nix/' -e '/\.devbox/' | paste -sd: -)"
+    XDG_DATA_DIRS="$(printf '%s' "${XDG_DATA_DIRS:-}" | tr ':' '\n' | grep -v -e '^/nix/' -e '/\.devbox/' | paste -sd: -)"
+    export PATH XDG_DATA_DIRS
+fi
+
 # Append to the history file, don't overwrite it
 shopt -s histappend
 
