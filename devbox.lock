@@ -1,0 +1,139 @@
+{
+  "lockfile_version": "1",
+  "packages": {
+    "distrobox@latest": {
+      "last_modified": "2026-11-16T14:48:49Z",
+      "resolved": "github:NixOS/nixpkgs/e21fec321d73511849707a7585e4ea155ee4bf40#distrobox",
+      "source": "devbox-search",
+      "version": "1.8.2.5",
+      "systems": {
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/abn5l1ygphzq63g99czwfw17zpwa6k1b-distrobox-1.8.2.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/abn5l1ygphzq63g99czwfw17zpwa6k1b-distrobox-1.8.2.5"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/8yqvi089rb69srld1ggri845whi1ffp3-distrobox-1.8.2.5",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/8yqvi089rb69srld1ggri845whi1ffp3-distrobox-1.8.2.5"
+        }
+      }
+    },
+    "github:NixOS/nixpkgs/nixpkgs-unstable": {
+      "last_modified": "2026-11-16T14:48:49Z",
+      "resolved": "github:NixOS/nixpkgs/e21fec321d73511849707a7585e4ea155ee4bf40?lastModified=1794840529&narHash=sha256-ySrWnmZB5UsZTYGHHnBjllT05O5iFjElCRS%2BmabtfP0%3D"
+    },
+    "go-task@latest": {
+      "last_modified": "2026-11-16T14:48:49Z",
+      "resolved": "github:NixOS/nixpkgs/e21fec321d73511849707a7585e4ea155ee4bf40#go-task",
+      "source": "devbox-search",
+      "version": "3.53.1",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/4xjig8cgycza9zcs1nw560xdjmxhsxbb-go-task-3.53.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/4xjig8cgycza9zcs1nw560xdjmxhsxbb-go-task-3.53.1"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/15hxxrx103wrz047vnpxqlik6yyii0av-go-task-3.53.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/15hxxrx103wrz047vnpxqlik6yyii0av-go-task-3.53.1"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/r4j6r76czbmqqyslbpzcwbpqllg4cpf1-go-task-3.53.1",
+              "default": true
+            }
+          ],
+          "store_path": "/nix/store/r4j6r76czbmqqyslbpzcwbpqllg4cpf1-go-task-3.53.1"
+        }
+      }
+    },
+    "vcstool@latest": {
+      "last_modified": "2026-03-21T07:29:51Z",
+      "resolved": "github:NixOS/nixpkgs/09061f748ee21f68a089cd5d91ec1859cd93d0be#vcstool",
+      "source": "devbox-search",
+      "version": "0.3.0",
+      "systems": {
+        "aarch64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/xkn2in3385xlzhdnbdd85z69l618ij7a-vcstool-0.3.0",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/nxdph7v1jx004ii358hz7x9i0vc4fvab-vcstool-0.3.0-dist"
+            }
+          ],
+          "store_path": "/nix/store/xkn2in3385xlzhdnbdd85z69l618ij7a-vcstool-0.3.0"
+        },
+        "aarch64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/cfac94blbkmbya2dd4b9a8gf51q51g9n-vcstool-0.3.0",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/qphg0kf2fgcywy8ml27hyrbr5792i61b-vcstool-0.3.0-dist"
+            }
+          ],
+          "store_path": "/nix/store/cfac94blbkmbya2dd4b9a8gf51q51g9n-vcstool-0.3.0"
+        },
+        "x86_64-darwin": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/l1hykpram1za947spflclglmv82dsnzz-vcstool-0.3.0",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/k5ryhrqi9i3k1jpfcl6jc7f7b9h6nwpy-vcstool-0.3.0-dist"
+            }
+          ],
+          "store_path": "/nix/store/l1hykpram1za947spflclglmv82dsnzz-vcstool-0.3.0"
+        },
+        "x86_64-linux": {
+          "outputs": [
+            {
+              "name": "out",
+              "path": "/nix/store/5xby61srnw7cfn8lzc92c5a21hn02vih-vcstool-0.3.0",
+              "default": true
+            },
+            {
+              "name": "dist",
+              "path": "/nix/store/5q12rpqbhw67v158bp99f3kj061d6rk2-vcstool-0.3.0-dist"
+            }
+          ],
+          "store_path": "/nix/store/5xby61srnw7cfn8lzc92c5a21hn02vih-vcstool-0.3.0"
+        }
+      }
+    }
+  }
+}

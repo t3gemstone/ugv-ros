@@ -1,0 +1,14 @@
+// Disables the UART of the on-board Bluetooth (main_uart6, ttyS6).
+//
+// The Bluetooth UART holds main pads 9/10 for RTS/CTS; because T3's uart-ttys0
+// overlay (the lidar UART, header pins 18/26) requests the same pads, ttyS0
+// fails to start at boot with "pin PIN10 already requested by 2860000.serial".
+// Wi-Fi is on the same chip but connected over SDIO, so it is not affected.
+//
+// Build and installation: https://docs.t3gemstone.org/en/projects/ugv-ros/installation#4-pwm-and-uart-settings-overlay
+/dts-v1/;
+/plugin/;
+
+&main_uart6 {
+	status = "disabled";
+};

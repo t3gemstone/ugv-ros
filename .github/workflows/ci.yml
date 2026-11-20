@@ -1,0 +1,38 @@
+# T3 Foundation Gemstone Project [t3gemstone.org]
+# SPDX-License-Identifier: Apache-2.0
+#
+# The workflow only prepares the environment and calls the tasks in Taskfile.yml;
+# every step can be reproduced locally with the same command inside 'task box'.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    env:
+      # Runs a command in the same development environment as 'task box' (Dockerfile, box stage)
+      BOX: >-
+        docker run --rm -v ${{ github.workspace }}:/home/workdir -w /home/workdir gemstone-ugv-ros
+    steps:
+      - uses: actions/checkout@v5
+
+      # Runtime-only dependencies such as navigation and SLAM are not installed in CI
+      - name: Build the development environment
+        run: >-
+          docker build --target box -t gemstone-ugv-ros
+          --build-arg ROSDEP_ARGS="-t build -t buildtool -t build_export -t buildtool_export -t test" .
+
+      - name: Lint
+        run: $BOX task lint
+
+      - name: Build and test
+        run: $BOX task test

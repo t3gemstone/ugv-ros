@@ -1,0 +1,13 @@
+build
+install
+log
+**/__pycache__
+.git
+.devbox
+.distrobox
+.task
+.meta
+firmware
+# The robot image fetches sllidar_ros2 from repos.yml itself; the copy that
+# 'task fetch' downloads on the host would add the same package to the workspace twice.
+src/sllidar_ros2

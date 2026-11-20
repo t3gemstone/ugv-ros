@@ -1,0 +1,32 @@
+mode_manager_node:
+  ros__parameters:
+    rate: 20.0
+    cmd_timeout: 0.5
+    teleop_takeover: true            # teleop while in another mode -> manual
+    safety:
+      # Lidar brake: slows down and stops before obstacles in every mode. Set to false if it
+      # gets in the way of manual driving in the field.
+      enabled: true
+      # Obstacles are searched for in the corridor the robot will drive through
+      # (body width + side_margin); distances are from the front (rear when reversing)
+      # end of the body [m]. Body dimensions come from robot.yaml.
+      stop_distance: 0.15
+      slow_distance: 0.35
+      side_margin: 0.01              # margin beyond the body edge; increase if the corners rub
+      scan_timeout: 0.5
+
+line_follower_node:
+  ros__parameters:
+    speed: 0.10
+    kp: 30.0                         # [rad/s / m]
+    kd: 0.6
+    max_angular: 2.5
+    min_speed_ratio: 0.3             # fraction of speed kept at the sharpest error
+    half_width: 0.03                 # at this error the speed drops to min_speed_ratio
+    search_angular: 1.0
+    lost_timeout: 4.0
+    intersection_action: stop    # straight | stop
+
+map_manager_node:
+  ros__parameters:
+    map_dir: ~/ugv_maps

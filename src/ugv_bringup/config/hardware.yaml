@@ -1,0 +1,114 @@
+# ALL of the robot's hardware connections are in this file (pin map: https://docs.t3gemstone.org/en/projects/ugv-ros/hardware).
+#
+# Pin  : T3 Gemstone O1 line name ("GPIO22") or "gpiochipN:line".
+# PWM  : module name ("ecap0", "epwm1:1"); pwmchip numbers change depending on the
+#        overlays, so use the module name instead of the number.
+# First step: `ros2 run ugv_base hw_check pins --config <this file>` resolves and lists every pin.
+#
+# ROS 2 rule: write float parameters with a decimal point (1.0, not 1).
+
+ugv_base_node:
+  ros__parameters:
+    motor_driver: in_in_pwm          # L298N: IN1/IN2 direction, ENA/ENB PWM (jumpers removed)
+    brake_on_stop: false
+    pwm_period_ns: 1000000           # 1 kHz; ENB's epwm1 channel shares its period with GPIO6
+
+    # Left/right as seen from behind the robot, facing the line sensor (front). On this
+    # robot the L298N's Motor 1 output (OUT1/OUT2) goes to the RIGHT wheel and the Motor 2
+    # output (OUT3/OUT4) to the LEFT wheel; verified with hw_check motors.
+    left:                            # Motor 2 (L298N OUT3/OUT4) -> left wheel
+      in1: "GPIO26"                  # pin 37 -> IN3 (pin 18 went to the lidar UART)
+      in2: "GPIO25"                  # pin 22 -> IN4
+      pwm: "epwm1:1"                 # GPIO13, pin 33 -> ENB
+      invert: true                   # mirrored mounting: this motor runs reversed
+      enc_a: "GPIO27"                # pin 13 <- Motor 2 encoder C1
+      enc_b: "GPIO23"                # pin 16 <- Motor 2 encoder C2
+      enc_invert: true
+    right:                           # Motor 1 (L298N OUT1/OUT2) -> right wheel
+      in1: "GPIO22"                  # pin 15 -> IN1
+      in2: "GPIO17"                  # pin 11 -> IN2
+      pwm: "ecap0"                   # GPIO12, pin 32 -> ENA
+      invert: false
+      enc_a: "GPIO4"                 # pin 7  <- Motor 1 encoder C1
+      enc_b: "GPIO5"                 # pin 29 <- Motor 1 encoder C2
+      enc_invert: false
+
+    encoder:
+      mode: x4
+      bias: as-is                    # the encoder board has built-in pull-ups
+      ppr: 546.0                     # Waveshare DCGM-3865: 13 PPR x 1:42, at the output shaft
+
+    max_wheel_speed: 0.88            # wheel speed at 100% duty [m/s]; hw_check sweep:
+                                     # right 0.878, left 0.885 (the smaller one, 2026-11-06)
+    max_accel: 0.6                   # start/stop acceleration [m/s^2]; 1.0 felt harsh
+    control_rate: 50.0
+    cmd_timeout: 0.5
+    speed_filter_alpha: 0.5
+    pid:
+      kp: 60.0
+      ki: 300.0
+      kff: 1.0
+      min_duty: 30.0                 # starts at 20–25% in the air; on the ground the inner wheel stalled at 20% in turns (2026-11-09)
+      max_duty: 100.0
+      i_limit: 60.0                  # integral contribution limit [%]; at 30 the treaded tires couldn't turn in curves (2026-11-09)
+
+line_sensor_node:
+  ros__parameters:
+    # Sensor in the kit: Pololu QTR-8A (8 channels, analog outputs).
+    # Power it only from 3.3 V and solder the "3.3V" jumper.
+    #   serial : sensor wired to the ADC of a Deneyap Kart 1A v2, the board sends to the
+    #            T3 Gemstone O1 UART (pin 8/10) — default (see the hardware docs)
+    #   digital: sensor wired directly to T3 Gemstone O1 GPIOs (pins below)
+    #   qtr_rc : Pololu QTR-8RC, same pins
+    type: serial
+    serial:
+      port: /dev/ttyS3               # UART-MAIN1: T3 Gemstone O1 TX pin 8, RX pin 10
+      baudrate: 115200
+      calibration: ~/.ugv/line_calibration.json   # written by /line/calibrate_white + _black
+    # digital / qtr_rc: left to right (from behind the robot, facing forward) D1 ... D8.
+    # D4/D8 are on pin 3/5: disable the i2c1 overlay first (pin 37 went to IN3, pin 26 to the lidar).
+    pins: ["GPIO21",                 # pin 40 <- D1
+           "GPIO6",                  # pin 31 <- D2
+           "GPIO19",                 # pin 35 <- D3
+           "GPIO2",                  # pin 3  <- D4
+           "GPIO16",                 # pin 36 <- D5
+           "GPIO20",                 # pin 38 <- D6
+           "GPIO8",                  # pin 24 <- D7
+           "GPIO3"]                  # pin 5  <- D8
+    emitter_pin: ""                  # IR (LED) pin unused: the LEDs on the board are on
+    spacing: -0.009525               # NEGATIVE: sensor array mounted reversed, position sign flipped (2026-11-09)
+    rate: 100.0
+    line_is_dark: true               # black line on a white surface
+    digital:
+      line_level: 1                  # level read over the black line
+      bias: as-is                    # internal pull resistors on T3 Gemstone O1 pads can't be enabled from software
+    qtr:                             # only for type: qtr_rc
+      threshold_us: 1000
+      timeout_us: 2500
+      charge_us: 10
+
+ugv_imu_node:
+  ros__parameters:
+    spi_device: /dev/spidev0.3       # T3 Gemstone O1 on-board ICM-20948
+    rate: 100.0
+    calibration_samples: 300         # don't move the robot for ~1.5 s at startup
+
+lidar_manager_node:
+  ros__parameters:
+    # usb : the lidar's own USB adapter (default); the adapter drives the motor
+    # gpio: no adapter, T3 Gemstone O1 UART + motor PWM (see the hardware docs)
+    # When changed from the Lidar panel in the UI, the choice is saved to state_file
+    # and takes precedence over the value here.
+    source: usb
+    state_file: ~/.ugv/lidar_source
+    baudrate: 115200                 # A1
+    frame_id: lidar_link
+    inverted: false
+    angle_compensate: true
+    usb:
+      port: ""                       # empty: the CP210x under /dev/serial/by-id, otherwise /dev/ttyUSB*
+    gpio:
+      port: /dev/ttyS0               # UART-WKUP0 (uart-ttys0 overlay): T3 Gemstone O1 TX pin 18, RX pin 26
+      pwm: "ecap2"                   # GPIO18, pin 12 -> lidar MOTOCTL
+      period_ns: 1000000
+      duty_percent: 85.0             # at 100% motor noise corrupted the UART (old robot)

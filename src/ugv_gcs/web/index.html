@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>UGV Control</title>
+  <link rel="stylesheet" href="style.css?v=line-calibration-1">
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>UGV Control</h1>
+      <span id="mode-badge" class="badge mode-idle">—</span>
+    </div>
+    <div class="conn">
+      <input id="host" aria-label="robot address" title="robot address (9090 if no port is given)" spellcheck="false">
+      <button id="connect">Connect</button>
+      <span id="conn-state" class="dot off" title="connection"></span>
+    </div>
+    <button id="estop" class="estop" title="Space bar">EMERGENCY STOP</button>
+    <button id="release" class="release hidden">Release emergency stop</button>
+  </header>
+
+  <main>
+    <section class="panel map-panel">
+      <div class="panel-head">
+        <h2>Map</h2>
+        <div class="row">
+          <label class="toggle"><input type="checkbox" id="goal-mode"> Click → goal</label>
+          <button id="reset-map" title="Resets the map and the robot pose">Reset map</button>
+        </div>
+      </div>
+      <canvas id="map"></canvas>
+      <p id="map-info" class="muted">Waiting for map (is SLAM running?)</p>
+    </section>
+
+    <div class="side">
+      <section class="panel">
+        <h2>Mode</h2>
+        <div class="modes">
+          <button data-mode="idle">Idle</button>
+          <button data-mode="manual">Manual</button>
+          <button data-mode="line">Line follow</button>
+        </div>
+        <p class="muted">Nav: engaged automatically when you click a goal on the map. Pressing a drive key in any mode switches to manual.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Drive</h2>
+        <div class="pad">
+          <button class="key" data-v="1" data-w="0" style="grid-area:up">▲</button>
+          <button class="key" data-v="0" data-w="1" style="grid-area:left">◀</button>
+          <button class="key" data-v="-1" data-w="0" style="grid-area:down">▼</button>
+          <button class="key" data-v="0" data-w="-1" style="grid-area:right">▶</button>
+        </div>
+        <label>Speed <span id="v-max-label"></span>
+          <input id="v-max" type="range" min="0.05" max="0.5" step="0.01" value="0.4"></label>
+        <label>Turn <span id="w-max-label"></span>
+          <input id="w-max" type="range" min="0.2" max="3.0" step="0.1" value="1.2"></label>
+        <p class="muted">W A S D / arrow keys · gamepad left stick · Space = emergency stop.
+          When reversing, left/right steer like a car.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Status</h2>
+        <dl class="stats">
+          <dt>Speed</dt><dd id="speed">—</dd>
+          <dt>Obstacle</dt><dd id="obstacle">—</dd>
+          <dt>Pose</dt><dd id="pose">—</dd>
+          <dt>Line</dt><dd id="line-status">—</dd>
+        </dl>
+        <div id="line-sensors" class="sensors"></div>
+        <p id="line-raw" class="muted raw"></p>
+      </section>
+
+      <section class="panel" aria-labelledby="calibration-title">
+        <h2 id="calibration-title">Line sensor calibration</h2>
+        <p class="muted">Fix the sensor at the height you will use it at. A white surface is
+          measured first, then a matte black one. Driving is disabled throughout.</p>
+        <p id="calibration-saved" class="muted">Waiting for sensor status…</p>
+        <div class="row calibration-actions">
+          <button id="calibration-start" disabled>Start calibration</button>
+          <button id="calibration-cancel" class="hidden">Close</button>
+        </div>
+        <p id="calibration-message" class="muted" role="status" aria-live="polite"></p>
+        <button id="calibration-capture" class="hidden" disabled>White ready — measure</button>
+        <div class="calibration-table-wrap">
+          <table id="calibration-table" class="hidden">
+            <caption>Last saved references (mV)</caption>
+            <thead><tr><th>Channel</th><th>White</th><th>Black</th><th>Threshold</th><th>Diff</th></tr></thead>
+            <tbody id="calibration-values"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Lidar</h2>
+        <div class="modes two">
+          <button data-lidar="usb">USB</button>
+          <button data-lidar="gpio">GPIO (UART)</button>
+        </div>
+        <p id="lidar-status" class="muted">—</p>
+      </section>
+
+      <section class="panel">
+        <h2>Save map</h2>
+        <div class="row">
+          <input id="map-name" placeholder="name (empty = date)" spellcheck="false">
+          <button id="save-map">Save</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <section class="panel log-panel">
+    <h2>Log</h2>
+    <div id="log"></div>
+  </section>
+
+  <script src="vendor/roslib.js"></script>
+  <script src="calibration.js?v=line-calibration-1"></script>
+  <script src="app.js?v=line-calibration-1"></script>
+</body>
+</html>

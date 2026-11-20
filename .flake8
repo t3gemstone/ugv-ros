@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 100
+exclude = build,install,log
+# The ament plugins in the ROS image (docstring, import order, quotes) are not
+# this project's style; only pycodestyle + pyflakes + mccabe are checked.
+select = E,W,F,C90
+extend-ignore = W503,W504

@@ -1,0 +1,24 @@
+# colcon output
+build/
+install/
+log/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# third-party sources fetched with vcs import (task fetch)
+src/sllidar_ros2/
+
+.DS_Store
+
+# Task (taskfile.dev) checksums
+.task/
+
+# Devbox, and the Distrobox home directory of 'task box'; only the shell settings are tracked
+.devbox
+.distrobox/**
+!.distrobox/.bashrc
+!.distrobox/.bash_aliases
+!.distrobox/.profile
+!.distrobox/.motd

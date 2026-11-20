@@ -1,0 +1,9 @@
+# Changes the lidar connection and stores the choice on the robot (ugv_hal/lidar_manager_node).
+
+string USB=usb    # the lidar's own USB adapter; the adapter drives the motor
+string GPIO=gpio  # T3 Gemstone O1 UART directly (/dev/ttyS0, pins 18/26) + motor PWM (pin 12)
+
+string source
+---
+bool success
+string message

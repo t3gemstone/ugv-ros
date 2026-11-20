@@ -1,0 +1,22 @@
+# On the robot:      docker compose up -d        (logs: docker compose logs -f)
+# Without hardware:  UGV_ARGS="backend:=mock" docker compose up
+services:
+  ugv:
+    build:
+      context: .
+      target: robot           # robot stage of the Dockerfile (box: development environment)
+    image: ugv-ros:jazzy
+    container_name: ugv
+    network_mode: host        # browser / ROS 2 on the host connect directly
+    ipc: host                 # DDS shared memory
+    privileged: true          # GPIO, SPI (IMU), sysfs PWM, serial port
+    volumes:
+      - /dev:/dev
+      - /sys:/sys
+      - ./src:/ugv_ws/src/ugv                     # edit the code without rebuilding the container
+      - ${HOME}/ugv_maps:/root/ugv_maps           # saved maps
+      - ${HOME}/.ugv:/root/.ugv                   # settings chosen in the UI (lidar connection)
+    environment:
+      - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
+    command: bash -c "ros2 launch ugv_bringup robot.launch.py $${UGV_ARGS:-}"
+    restart: unless-stopped

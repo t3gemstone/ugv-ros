@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ugv_hal</name>
+  <version>0.1.0</version>
+  <description>
+    Shared hardware layer for T3 Gemstone O1 GPIO (libgpiod v1/v2) and sysfs PWM;
+    includes a mock backend for development without hardware.
+  </description>
+  <maintainer email="support@t3gemstone.org">T3 Gemstone</maintainer>
+  <license>Apache-2.0</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>ugv_interfaces</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>sllidar_ros2</exec_depend>
+  <exec_depend>python3-libgpiod</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

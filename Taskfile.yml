@@ -1,0 +1,77 @@
+# T3 Foundation Gemstone Project [t3gemstone.org]
+# SPDX-License-Identifier: Apache-2.0
+#
+# Tasks for the development machine. 'task box' enters the development
+# environment (the Dockerfile's box stage, via Distrobox); run the other tasks
+# inside it. 'task' lists the tasks and environment variables.
+# The robot is installed with the scripts under scripts/, not with these tasks.
+
+version: '3'
+
+vars:
+  ROS_DISTRO: '{{ .ROS_DISTRO | default "jazzy" }}'
+  ROS_SETUP: 'source /opt/ros/{{ .ROS_DISTRO }}/setup.bash'
+  WS_SETUP: 'source install/setup.bash'
+  BOX: gemstone-ugv-ros
+
+tasks:
+
+  default:
+    silent: true
+    cmds:
+      - task --list-all --summary
+      - echo -e "\nEnvironment:\n"
+      - echo "  ROS_DISTRO     = '{{ .ROS_DISTRO }}'"
+      - echo "  ROS_DOMAIN_ID  = '${ROS_DOMAIN_ID:-0}'"
+      - echo "  BOX            = '{{ .BOX }}'"
+      - echo ""
+
+  box:
+    desc: Enters the ROS 2 Jazzy development environment (Distrobox, Ubuntu 24.04); builds the image the first time
+    cmds:
+      - distrobox-list | grep -q '{{ .BOX }}' || docker build --target box -f Dockerfile -t {{ .BOX }}:latest .
+      - distrobox-assemble create --file distrobox.ini
+      - distrobox-enter --additional-flags "--tty" --name {{ .BOX }} --no-workdir
+
+  destroy:
+    prompt: The development environment (Distrobox container and Docker image) will be deleted... Continue?
+    desc: Deletes the development environment's Distrobox container and Docker image
+    cmds:
+      - distrobox stop {{ .BOX }} --yes || true
+      - distrobox rm {{ .BOX }} --force || true
+      - docker rmi {{ .BOX }} || true
+
+  fetch:
+    desc: Downloads the third-party packages built from source (repos.yml) into src/
+    cmds:
+      - vcs import --skip-existing src < repos.yml
+
+  build:
+    desc: Builds the workspace with colcon (arguments such as task build -- --packages-select ugv_base are passed to colcon)
+    cmds:
+      - task: fetch
+      - bash -c '{{ .ROS_SETUP }} && colcon build --symlink-install --event-handlers console_cohesion- {{ .CLI_ARGS }}'
+
+  lint:
+    desc: Checks the Python code with flake8 and the scripts with shellcheck
+    cmds:
+      - python3 -m flake8 src/ugv_*
+      - shellcheck -e SC1091 setup.sh scripts/*.sh
+
+  test:
+    desc: Builds, then runs the UGV package tests and the web UI calibration tests
+    cmds:
+      - task: build
+      - node --test src/ugv_gcs/test/*.test.cjs
+      - bash -c '{{ .WS_SETUP }} && colcon test --packages-select-regex "^ugv_" --event-handlers console_cohesion- && colcon test-result --verbose'
+
+  mock:
+    desc: Runs the robot without hardware, UI at http://localhost:8000 (arguments such as task mock -- slam:=true are passed to launch)
+    cmds:
+      - task: build
+      - bash -c '{{ .WS_SETUP }} && ros2 launch ugv_bringup robot.launch.py backend:=mock fusion:=false line:=false slam:=false {{ .CLI_ARGS }}'
+
+  clean:
+    desc: Deletes the colcon output (build, install, log)
+    cmds:
+      - rm -rf build install log

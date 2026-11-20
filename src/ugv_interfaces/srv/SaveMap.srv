@@ -1,0 +1,9 @@
+# Saves the SLAM map on the robot (ugv_navigation/map_manager_node).
+# Writes both the image (.pgm/.yaml, for the Nav2 map_server) and the pose graph
+# (.posegraph/.data, for slam_toolbox localization mode).
+
+string name   # generated from a timestamp if empty
+---
+bool success
+string message
+string path   # saved path without extension

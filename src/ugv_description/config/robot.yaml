@@ -1,0 +1,48 @@
+# The SINGLE source for the robot geometry.
+#
+# Both the URDF (urdf/ugv.urdf.xacro) and ugv_base_node (kinematics/odometry)
+# read this file; change the wheel dimensions here only.
+#
+# base_link: midpoint of the axle between the two drive wheels (wheel_radius
+# above the ground). x forward, y left, z up. Units: metres / radians.
+#
+# NOTE: The values are placeholders and must be measured on the new chassis.
+
+wheel_radius: 0.0425       # 85 mm medium off-road wheel; the tyre compresses
+                           # under load, so correct it with a 1 m straight-drive test
+wheel_separation: 0.17     # PLACEHOLDER: distance between the two wheel centres (contact points), to be measured
+wheel_width: 0.038
+
+chassis:                   # the lidar brake uses these dimensions too (body footprint)
+  length: 0.19
+  width: 0.23
+  height: 0.07
+  x: 0.025                 # 2026-11-09: axle ~12 cm behind the front (line sensor included)
+  z: 0.02
+
+caster:
+  radius: 0.015
+  x: 0.11
+
+# Sensor mounting poses (relative to base_link).
+imu:                       # ICM-20948 on the T3 Gemstone O1 board
+  x: 0.0
+  y: 0.0
+  z: 0.04
+  # In the kit the IMU is mounted flipped: while the robot turned left /imu/data_raw z was
+  # negative (2026-10-28, wheels +1.07, IMU -0.93 rad/s). Verification: field test step 2 (https://docs.t3gemstone.org/en/projects/ugv-ros/field-test#2-imu).
+  roll: 3.14159
+  pitch: 0.0
+  yaw: 0.0
+lidar:                     # centre of the RPLIDAR A1 rotating head
+  x: 0.01
+  y: 0.0
+  z: 0.12
+  # Angle of the lidar's 0° arrow relative to the base_link x axis. In the kit the lidar
+  # is mounted rotated 180° (2026-10-28, a box placed in front of the robot showed up at
+  # -179° in /scan). To re-measure: field test step 8 (https://docs.t3gemstone.org/en/projects/ugv-ros/field-test#8-lidar).
+  yaw: 3.124
+line_sensor:               # centre of the line sensor array
+  x: 0.12
+  y: 0.0
+  z: -0.025
